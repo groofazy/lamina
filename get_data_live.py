@@ -45,8 +45,8 @@ def scrape_season(season):
         with open(save_path, "w+", encoding="utf-8") as f:
             f.write(html)
 
-#for season in SEASONS: # loop to scrape through each season
-    #scrape_season(season)
+for season in SEASONS: # loop to scrape through each season
+    scrape_season(season)
 
 standings_files = os.listdir(STANDINGS_DIR)
 
@@ -71,7 +71,7 @@ def scrape_game(standings_file):
         with open(save_path, "w+", encoding="utf-8") as f:
             f.write(html)
 
-standings_files = [s for s in standings_files if ".html" in s] # filter dstore
+standings_files = [s for s in standings_files if ".html" in s] # filter dstore out
 
 for f in standings_files:
     filepath = os.path.join(STANDINGS_DIR, f)
