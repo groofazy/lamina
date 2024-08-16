@@ -92,7 +92,9 @@ for box_score in box_scores:
         print(f"{len(games)} / {len(box_scores)}")
 
 #concat all games together
-games_df = pd.concat(games, ignore_index=True) # combine all games, treat all games as rows
+#games_df = pd.concat(games, ignore_index=True) # combine all games, treat all games as rows
+
+[g.shape for g in games]
 
 # code to import into csv
-games_df.to_csv("nba_games.csv")
+ #games_df.to_csv("nba_games.csv")
