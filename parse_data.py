@@ -1,8 +1,6 @@
 import os
-
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
 import pandas as pd
 from bs4 import BeautifulSoup
 from io import StringIO
@@ -14,13 +12,19 @@ box_scores = os.listdir(SCORE_DIR)
 box_scores = [os.path.join(SCORE_DIR, f) for f in box_scores if f.endswith(".html")]
 
 def parse_html(box_score): # parses and cleans up html
-    with open(box_score) as f:
+    with open(box_score, encoding="utf-8") as f:
         html = f.read()
 
     soup = BeautifulSoup(html, features="lxml")
     [s.decompose() for s in soup.select("tr.over_header")]
     [s.decompose() for s in soup.select("tr.thead")]
     return soup
+
+def read_season_info(soup):
+    nav = soup.select("#bottom_nav_container")[0]
+    hrefs = [a["href"] for a in nav.find_all("a")] # finding all anchor tags
+    season = os.path.basename(hrefs[1]).split("_")[0]
+    return season
 
 def read_line_score(soup):
     line_score = pd.read_html(str(soup), attrs={"id": "line_score"}) [0]# reads for html attr tag "id = line_score" and sends it back as pd dataframe
@@ -33,23 +37,17 @@ def read_line_score(soup):
     return line_score
 
 def read_stats(soup, team, stat):
-    df = pd.read_html(str(soup), attrs={"id": f"box-{team}-game-{stat}"}, index_col=0) [0]
+    df = pd.read_html(str(soup), attrs={'id': f'box-{team}-game-{stat}'}, index_col=0) [0]
     df = df.apply(pd.to_numeric, errors="coerce")
     return df
-
-def read_season_info(soup):
-    nav = soup.select("#bottom_nav_container")[0]
-    hrefs = [a["href"] for a in nav.find_all("a")] # finding all anchor tags
-    season = os.path.basename(hrefs[1]).split("_")[0]
-    return season
 
 # main parse loop
 
 base_cols = None
 games = []
 for box_score in box_scores:
-    box_score = box_scores[0]
     soup = parse_html(box_score)
+
     line_score = read_line_score(soup)
     teams = list(line_score["team"])
 
@@ -82,7 +80,6 @@ for box_score in box_scores:
     game_opp.columns += "_opp"
 
     full_game = pd.concat([game, game_opp], axis=1)
-
     full_game["season"] = read_season_info(soup) # displays season in df
 
     full_game["date"] = os.path.basename(box_score) [:8]
@@ -92,12 +89,10 @@ for box_score in box_scores:
     games.append(full_game)
 
     if len(games) % 100 == 0:
-        print(f"{len(games)} / len{box_scores}")
+        print(f"{len(games)} / {len(box_scores)}")
 
 #concat all games together
 games_df = pd.concat(games, ignore_index=True) # combine all games, treat all games as rows
-
-[g.shape[1] for g in games if g.shape[1] != 150]
 
 # code to import into csv
 games_df.to_csv("nba_games.csv")
