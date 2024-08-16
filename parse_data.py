@@ -1,6 +1,11 @@
 import os
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 import pandas as pd
 from bs4 import BeautifulSoup
+from io import StringIO
 
 SCORE_DIR = "data/scores"
 
@@ -12,14 +17,14 @@ def parse_html(box_score): # parses and cleans up html
     with open(box_score) as f:
         html = f.read()
 
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="lxml")
     [s.decompose() for s in soup.select("tr.over_header")]
     [s.decompose() for s in soup.select("tr.thead")]
     return soup
 
 def read_line_score(soup):
-    line_score = pd.read_html(str(soup), attrs={"id": "line_score"}) # reads for html attr tag "id = line_score" and sends it back as pd dataframe
-    cols = list(line_score.colums)
+    line_score = pd.read_html(str(soup), attrs={"id": "line_score"}) [0]# reads for html attr tag "id = line_score" and sends it back as pd dataframe
+    cols = list(line_score.columns)
     cols[0] = "team"
     cols[-1] = "total"
     line_score.columns = cols
@@ -42,9 +47,9 @@ def read_season_info(soup):
 
 base_cols = None
 games = []
-for box_scores in box_scores:
+for box_score in box_scores:
     box_score = box_scores[0]
-    soup =parse_html(box_score)
+    soup = parse_html(box_score)
     line_score = read_line_score(soup)
     teams = list(line_score["team"])
 
@@ -74,7 +79,7 @@ for box_scores in box_scores:
 
     game["home"] = [0,1] # 0 is home, 1 is away
     game_opp = game.iloc[::-1].reset_index()# first row is now second row 
-    game_opp.columns += "opp"
+    game_opp.columns += "_opp"
 
     full_game = pd.concat([game, game_opp], axis=1)
 
