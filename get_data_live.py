@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 import time
 
-SEASONS = list(range(2022, 2023))
+SEASONS = list(range(2019, 2023))
 DATA_DIR = "data" #creating directory
 STANDINGS_DIR = os.path.join(DATA_DIR, "standings") #pointers to standings directory
 SCORES_DIR = os.path.join(DATA_DIR, "scores")
